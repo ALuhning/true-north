@@ -151,12 +151,16 @@ export function adminRouter(io: Server) {
 
       const data = questionSchema.parse(req.body);
 
-      // Generate new question ID
-      const lastQuestion = db.prepare('SELECT id FROM questions ORDER BY id DESC LIMIT 1').get() as { id: string } | undefined;
-      const lastNum = lastQuestion ? parseInt(lastQuestion.id.substring(1)) : 0;
-      const newId = `q${lastNum + 1}`;
+      // Generate new question ID - find highest number and add 1
+      const allQuestions = db.prepare('SELECT id FROM questions').all() as { id: string }[];
+      const questionNumbers = allQuestions
+        .map(q => parseInt(q.id.substring(1)))
+        .filter(num => !isNaN(num));
+      
+      const maxNum = questionNumbers.length > 0 ? Math.max(...questionNumbers) : 0;
+      const newId = `q${maxNum + 1}`;
 
-      console.log(`Creating question with ID: ${newId}`);
+      console.log(`Creating question with ID: ${newId} (max existing: ${maxNum})`);
 
       db.prepare(`
         INSERT INTO questions (id, prompt, answer, explanation, tags, image_url, active)
