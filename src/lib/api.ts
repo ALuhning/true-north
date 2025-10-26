@@ -7,6 +7,7 @@ export interface CreatePlayerRequest {
 
 export interface CreatePlayerResponse {
   playerId: string;
+  nickname: string;
 }
 
 export interface StartSessionRequest {

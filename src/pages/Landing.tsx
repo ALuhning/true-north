@@ -27,8 +27,16 @@ export function Landing() {
 
     try {
       const deviceId = getDeviceId();
-      const { playerId } = await api.createPlayer({ nickname: nickname.trim(), deviceId });
+      const { playerId, nickname: finalNickname } = await api.createPlayer({ nickname: nickname.trim(), deviceId });
       setPlayerId(playerId);
+      
+      // Show message if nickname was changed
+      if (finalNickname !== nickname.trim()) {
+        setNickname(finalNickname);
+        // Brief delay to let user see their actual nickname
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
       setShowTutorial(true);
     } catch (err) {
       setError('Failed to create player. Please try again.');
@@ -76,6 +84,11 @@ export function Landing() {
                 autoFocus
                 disabled={loading}
               />
+              {loading && nickname && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Your leaderboard name: <span className="font-semibold">{nickname}</span>
+                </p>
+              )}
             </div>
 
             {error && (

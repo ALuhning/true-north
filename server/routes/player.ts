@@ -20,16 +20,18 @@ router.post('/', (req, res) => {
     ).get(deviceId) as { id: string } | undefined;
 
     if (existing) {
-      // Update nickname if changed
-      db.prepare('UPDATE players SET nickname = ? WHERE id = ?').run(nickname, existing.id);
-      return res.json({ playerId: existing.id });
+      // Update nickname if changed (with disambiguation)
+      const uniqueNickname = makeNicknameUnique(nickname, existing.id);
+      db.prepare('UPDATE players SET nickname = ? WHERE id = ?').run(uniqueNickname, existing.id);
+      return res.json({ playerId: existing.id, nickname: uniqueNickname });
     }
 
-    // Create new player
+    // Create new player with unique nickname
     const playerId = uuidv4();
-    db.prepare('INSERT INTO players (id, nickname) VALUES (?, ?)').run(playerId, nickname);
+    const uniqueNickname = makeNicknameUnique(nickname);
+    db.prepare('INSERT INTO players (id, nickname) VALUES (?, ?)').run(playerId, uniqueNickname);
 
-    res.json({ playerId });
+    res.json({ playerId, nickname: uniqueNickname });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -38,5 +40,56 @@ router.post('/', (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+/**
+ * Make nickname unique by appending a number if it already exists
+ * @param nickname - Desired nickname
+ * @param excludePlayerId - Player ID to exclude from duplicate check (for updates)
+ */
+function makeNicknameUnique(nickname: string, excludePlayerId?: string): string {
+  const baseNickname = nickname.trim();
+  
+  // Check if exact nickname exists
+  let query = 'SELECT COUNT(*) as count FROM players WHERE nickname = ?';
+  let params: any[] = [baseNickname];
+  
+  if (excludePlayerId) {
+    query += ' AND id != ?';
+    params.push(excludePlayerId);
+  }
+  
+  const exactMatch = db.prepare(query).get(...params) as { count: number };
+  
+  if (exactMatch.count === 0) {
+    return baseNickname;
+  }
+  
+  // Find the highest number suffix
+  let suffixQuery = `SELECT nickname FROM players WHERE nickname LIKE ?`;
+  let suffixParams: any[] = [`${baseNickname}%`];
+  
+  if (excludePlayerId) {
+    suffixQuery += ' AND id != ?';
+    suffixParams.push(excludePlayerId);
+  }
+  
+  const similar = db.prepare(suffixQuery).all(...suffixParams) as { nickname: string }[];
+  
+  let maxNumber = 0;
+  const pattern = new RegExp(`^${baseNickname}(\\d+)$`);
+  
+  for (const row of similar) {
+    const match = row.nickname.match(pattern);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > maxNumber) {
+        maxNumber = num;
+      }
+    }
+  }
+  
+  // Return nickname with next available number
+  return `${baseNickname}${maxNumber + 1}`;
+}
 
 export { router as playerRouter };
