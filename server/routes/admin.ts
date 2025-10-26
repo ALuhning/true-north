@@ -17,7 +17,7 @@ const questionSchema = z.object({
   answer: z.enum(['CAN', 'USA']),
   explanation: z.string().min(1),
   tags: z.string().optional(),
-  image_url: z.string().url().optional()
+  image_url: z.string().url().optional().or(z.literal(''))
 });
 
 export function adminRouter(io: Server) {
@@ -147,6 +147,8 @@ export function adminRouter(io: Server) {
         return res.status(403).json({ error: 'Invalid admin code' });
       }
 
+      console.log('Creating question with data:', JSON.stringify(req.body, null, 2));
+
       const data = questionSchema.parse(req.body);
 
       // Generate new question ID
@@ -154,18 +156,24 @@ export function adminRouter(io: Server) {
       const lastNum = lastQuestion ? parseInt(lastQuestion.id.substring(1)) : 0;
       const newId = `q${lastNum + 1}`;
 
+      console.log(`Creating question with ID: ${newId}`);
+
       db.prepare(`
         INSERT INTO questions (id, prompt, answer, explanation, tags, image_url, active)
         VALUES (?, ?, ?, ?, ?, ?, 1)
       `).run(newId, data.prompt, data.answer, data.explanation, data.tags || '', data.image_url || null);
 
+      console.log(`Question ${newId} created successfully`);
+
       res.json({ success: true, message: 'Question created', id: newId });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation error creating question:', error.errors);
         return res.status(400).json({ error: 'Invalid input', details: error.errors });
       }
       console.error('Error creating question:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ error: 'Internal server error', message: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
