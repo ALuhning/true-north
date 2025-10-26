@@ -105,7 +105,7 @@ function seedQuestions() {
     { prompt: 'Keanu Reeves', answer: 'CAN', explanation: 'Born in Beirut but raised in Toronto, Ontario.', tags: 'people,entertainment', image_url: 'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=800&auto=format&fit=crop' },
     { prompt: 'Ryan Gosling', answer: 'CAN', explanation: 'Born in London, Ontario.', tags: 'people,entertainment', image_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop' },
     { prompt: 'Basketball (the sport)', answer: 'USA', explanation: 'Invented in Springfield, Massachusetts by Canadian James Naismith in 1891.', tags: 'sports,invention', image_url: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?w=800&auto=format&fit=crop' },
-    { prompt: 'Peanut butter', answer: 'USA', explanation: 'Patented by Marcellus Gilmore Edson (Canadian), but modern version by Americans.', tags: 'food,invention', image_url: 'https://images.unsplash.com/photo-1520961880-4f3e2c36bb6e?w=800&auto=format&fit=crop' },
+    { prompt: 'Peanut butter', answer: 'USA', explanation: 'Patented by Marcellus Gilmore Edson (Canadian), but modern version by Americans.', tags: 'food,invention', image_url: 'https://images.unsplash.com/photo-1588865198009-cf2e0eb70088?w=800&auto=format&fit=crop' },
     
     // American
     { prompt: 'Starbucks', answer: 'USA', explanation: 'Founded in Seattle, Washington in 1971.', tags: 'brand,coffee', image_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop' },
@@ -119,7 +119,7 @@ function seedQuestions() {
     { prompt: 'Graceland', answer: 'USA', explanation: "Elvis Presley's mansion in Memphis, Tennessee.", tags: 'landmark,music', image_url: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&auto=format&fit=crop' },
     { prompt: 'Harley-Davidson motorcycles', answer: 'USA', explanation: 'Founded in Milwaukee, Wisconsin in 1903.', tags: 'brand,transportation', image_url: 'https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=800&auto=format&fit=crop' },
     { prompt: 'NASA', answer: 'USA', explanation: 'The National Aeronautics and Space Administration is a U.S. agency.', tags: 'organization,space', image_url: 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=800&auto=format&fit=crop' },
-    { prompt: 'Hollywood', answer: 'USA', explanation: 'Located in Los Angeles, California.', tags: 'entertainment,location', image_url: 'https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=800&auto=format&fit=crop' },
+    { prompt: 'Hollywood', answer: 'USA', explanation: 'Located in Los Angeles, California.', tags: 'entertainment,location', image_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&auto=format&fit=crop' },
     { prompt: 'Broadway theatre district', answer: 'USA', explanation: 'Located in New York City.', tags: 'entertainment,location', image_url: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800&auto=format&fit=crop' },
     { prompt: 'Grand Canyon', answer: 'USA', explanation: 'Located in Arizona.', tags: 'nature,landmark', image_url: 'https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&auto=format&fit=crop' },
     { prompt: 'Disneyland', answer: 'USA', explanation: 'First park opened in Anaheim, California in 1955.', tags: 'entertainment,landmark', image_url: 'https://images.unsplash.com/photo-1601745814106-23209136e0a4?w=800&auto=format&fit=crop' },
