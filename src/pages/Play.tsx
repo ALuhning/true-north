@@ -24,6 +24,7 @@ export function Play() {
   const [loading, setLoading] = useState(true);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [timerProgress, setTimerProgress] = useState(100);
+  const [transitioning, setTransitioning] = useState(false);
   const [feedback, setFeedback] = useState<{
     correct: boolean;
     explanation: string;
@@ -56,7 +57,8 @@ export function Play() {
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to start session:', error);
-          alert('Failed to start game. Please try again.');
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          alert(`Failed to start game: ${errorMessage}\n\nPlease try again or contact support if the issue persists.`);
           navigate('/');
         }
       } finally {
@@ -94,8 +96,9 @@ export function Play() {
   }, [currentIndex, isComplete, loading, navigate]);
 
   const handleAnswer = async (guess: 'CAN' | 'USA') => {
-    if (!sessionId || feedback) return;
+    if (!sessionId || feedback || transitioning) return;
 
+    setTransitioning(true);
     const latencyMs = Date.now() - questionStartTime;
     const currentQuestion = deck[currentIndex];
 
@@ -116,6 +119,7 @@ export function Play() {
       // Move to next question after showing feedback
       setTimeout(() => {
         setFeedback(null);
+        setTransitioning(false);
         nextQuestion();
         setQuestionStartTime(Date.now());
         setTimerProgress(100);
@@ -123,6 +127,7 @@ export function Play() {
     } catch (error) {
       console.error('Failed to submit answer:', error);
       alert('Failed to submit answer. Please try again.');
+      setTransitioning(false);
     }
   };
 
@@ -165,7 +170,7 @@ export function Play() {
               {feedback.explanation}
             </div>
           </div>
-        ) : (
+        ) : !transitioning && (
           <Card
             question={currentQuestion}
             onSwipeLeft={() => handleAnswer('CAN')}

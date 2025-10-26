@@ -36,6 +36,15 @@ export function sessionRouter(io: Server) {
     try {
       const { playerId, deviceId } = startSessionSchema.parse(req.body);
 
+      console.log(`Starting session for player ${playerId}, device ${deviceId}`);
+
+      // Verify player exists
+      const player = db.prepare('SELECT id FROM players WHERE id = ?').get(playerId);
+      if (!player) {
+        console.error(`Player not found: ${playerId}`);
+        return res.status(404).json({ error: 'Player not found' });
+      }
+
       // Check for active session - if it has no answers yet, return it
       const activeSession = db.prepare(
         'SELECT id FROM sessions WHERE device_id = ? AND end_time IS NULL ORDER BY start_time DESC LIMIT 1'
@@ -49,6 +58,7 @@ export function sessionRouter(io: Server) {
 
         // If no answers yet, it's safe to reuse (React StrictMode double render)
         if (answerCount.count === 0) {
+          console.log(`Reusing session ${activeSession.id} (no answers yet)`);
           // Get the questions for this session by re-querying
           // (we need to get them again since we don't store the deck)
           const canQuestions = db.prepare(
@@ -73,6 +83,7 @@ export function sessionRouter(io: Server) {
           return res.json({ sessionId: activeSession.id, deck });
         } else {
           // Session has answers, can't reuse it
+          console.log(`Active session ${activeSession.id} already has ${answerCount.count} answers`);
           return res.status(400).json({ error: 'Active session already exists with answers' });
         }
       }
@@ -86,12 +97,15 @@ export function sessionRouter(io: Server) {
         "SELECT * FROM questions WHERE answer = 'USA' AND active = 1 ORDER BY RANDOM() LIMIT 10"
       ).all() as Question[];
 
+      console.log(`Found ${canQuestions.length} Canadian and ${usaQuestions.length} American questions`);
+
       const allQuestions = [...canQuestions, ...usaQuestions]
         .sort(() => Math.random() - 0.5)
         .slice(0, 20);
 
       if (allQuestions.length < 20) {
-        return res.status(500).json({ error: 'Not enough active questions' });
+        console.error(`Not enough questions: ${allQuestions.length}/20`);
+        return res.status(500).json({ error: `Not enough active questions (${allQuestions.length}/20 available)` });
       }
 
       // Create session
@@ -101,6 +115,8 @@ export function sessionRouter(io: Server) {
       db.prepare(
         'INSERT INTO sessions (id, player_id, device_id, start_time) VALUES (?, ?, ?, ?)'
       ).run(sessionId, playerId, deviceId, startTime);
+
+      console.log(`Created session ${sessionId}`);
 
       // Return deck without answers
       const deck = allQuestions.map((q, index) => ({
@@ -113,10 +129,11 @@ export function sessionRouter(io: Server) {
       res.json({ sessionId, deck });
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
         return res.status(400).json({ error: 'Invalid input', details: error.errors });
       }
       console.error('Error starting session:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Internal server error', message: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
