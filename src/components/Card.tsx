@@ -66,11 +66,11 @@ export function Card({ question, onSwipeLeft, onSwipeRight, timerProgress }: Car
         `}
       >
         {question.imageUrl && (
-          <div className="w-full mb-6">
+          <div className="w-full mb-6 h-48 overflow-hidden rounded-lg bg-gray-100">
             <img
               src={question.imageUrl}
               alt={question.prompt}
-              className="w-full h-48 object-cover rounded-lg"
+              className="w-full h-full object-cover"
             />
           </div>
         )}

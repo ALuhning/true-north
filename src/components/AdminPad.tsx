@@ -380,14 +380,16 @@ export function AdminPad() {
                         className="flex items-start gap-4 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         {q.image_url && (
-                          <img
-                            src={q.image_url}
-                            alt={q.prompt}
-                            className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
+                          <div className="w-24 h-24 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
+                            <img
+                              src={q.image_url}
+                              alt={q.prompt}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">

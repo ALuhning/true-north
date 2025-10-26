@@ -133,11 +133,11 @@ export function QuestionEditor({ code, question, onSave, onCancel, setMessage }:
           placeholder="https://images.unsplash.com/photo-..."
         />
         {imageUrl && (
-          <div className="mt-2">
+          <div className="mt-2 w-full h-48 overflow-hidden rounded-lg bg-gray-100">
             <img
               src={imageUrl}
               alt="Preview"
-              className="w-full h-48 object-cover rounded-lg"
+              className="w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3EInvalid URL%3C/text%3E%3C/svg%3E';
               }}
