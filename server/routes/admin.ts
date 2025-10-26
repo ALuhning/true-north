@@ -12,6 +12,14 @@ const adminActionSchema = z.object({
   sessionId: z.string().optional()
 });
 
+const questionSchema = z.object({
+  prompt: z.string().min(1),
+  answer: z.enum(['CAN', 'USA']),
+  explanation: z.string().min(1),
+  tags: z.string().optional(),
+  image_url: z.string().url().optional()
+});
+
 export function adminRouter(io: Server) {
   const router = Router();
 
@@ -104,6 +112,115 @@ export function adminRouter(io: Server) {
       res.json({ entries });
     } catch (error) {
       console.error('Error fetching admin leaderboard:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get all questions for admin management
+  router.get('/questions', (req, res) => {
+    try {
+      const code = req.query.code as string;
+
+      if (code !== ADMIN_CODE) {
+        return res.status(403).json({ error: 'Invalid admin code' });
+      }
+
+      const questions = db.prepare(`
+        SELECT id, prompt, answer, explanation, tags, image_url, active
+        FROM questions
+        ORDER BY prompt ASC
+      `).all();
+
+      res.json({ questions });
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Create new question
+  router.post('/questions', (req, res) => {
+    try {
+      const code = req.body.code as string;
+
+      if (code !== ADMIN_CODE) {
+        return res.status(403).json({ error: 'Invalid admin code' });
+      }
+
+      const data = questionSchema.parse(req.body);
+
+      // Generate new question ID
+      const lastQuestion = db.prepare('SELECT id FROM questions ORDER BY id DESC LIMIT 1').get() as { id: string } | undefined;
+      const lastNum = lastQuestion ? parseInt(lastQuestion.id.substring(1)) : 0;
+      const newId = `q${lastNum + 1}`;
+
+      db.prepare(`
+        INSERT INTO questions (id, prompt, answer, explanation, tags, image_url, active)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
+      `).run(newId, data.prompt, data.answer, data.explanation, data.tags || '', data.image_url || null);
+
+      res.json({ success: true, message: 'Question created', id: newId });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      console.error('Error creating question:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Update question
+  router.put('/questions/:id', (req, res) => {
+    try {
+      const code = req.body.code as string;
+
+      if (code !== ADMIN_CODE) {
+        return res.status(403).json({ error: 'Invalid admin code' });
+      }
+
+      const data = questionSchema.parse(req.body);
+      const questionId = req.params.id;
+
+      const result = db.prepare(`
+        UPDATE questions 
+        SET prompt = ?, answer = ?, explanation = ?, tags = ?, image_url = ?
+        WHERE id = ?
+      `).run(data.prompt, data.answer, data.explanation, data.tags || '', data.image_url || null, questionId);
+
+      if (result.changes === 0) {
+        return res.status(404).json({ error: 'Question not found' });
+      }
+
+      res.json({ success: true, message: 'Question updated' });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      console.error('Error updating question:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Delete question
+  router.delete('/questions/:id', (req, res) => {
+    try {
+      const code = req.query.code as string;
+
+      if (code !== ADMIN_CODE) {
+        return res.status(403).json({ error: 'Invalid admin code' });
+      }
+
+      const questionId = req.params.id;
+
+      const result = db.prepare('DELETE FROM questions WHERE id = ?').run(questionId);
+
+      if (result.changes === 0) {
+        return res.status(404).json({ error: 'Question not found' });
+      }
+
+      res.json({ success: true, message: 'Question deleted' });
+    } catch (error) {
+      console.error('Error deleting question:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

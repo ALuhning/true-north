@@ -171,6 +171,80 @@ class ApiClient {
 
     return response.json();
   }
+
+  async getAdminQuestions(code: string): Promise<{ questions: Array<{
+    id: string;
+    prompt: string;
+    answer: 'CAN' | 'USA';
+    explanation: string;
+    tags: string;
+    image_url: string | null;
+    active: number;
+  }> }> {
+    const response = await fetch(`${API_BASE}/admin/questions?code=${encodeURIComponent(code)}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch questions');
+    }
+
+    return response.json();
+  }
+
+  async createQuestion(code: string, data: {
+    prompt: string;
+    answer: 'CAN' | 'USA';
+    explanation: string;
+    tags?: string;
+    image_url?: string;
+  }): Promise<{ success: boolean; message: string; id: string }> {
+    const response = await fetch(`${API_BASE}/admin/questions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, ...data })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create question');
+    }
+
+    return response.json();
+  }
+
+  async updateQuestion(code: string, id: string, data: {
+    prompt: string;
+    answer: 'CAN' | 'USA';
+    explanation: string;
+    tags?: string;
+    image_url?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE}/admin/questions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, ...data })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update question');
+    }
+
+    return response.json();
+  }
+
+  async deleteQuestion(code: string, id: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE}/admin/questions/${id}?code=${encodeURIComponent(code)}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete question');
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient();
