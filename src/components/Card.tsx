@@ -12,6 +12,11 @@ interface CardProps {
 export function Card({ question, onSwipeLeft, onSwipeRight, timerProgress }: CardProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
 
+  // Reset swipe direction when question changes
+  useEffect(() => {
+    setSwipeDirection(null);
+  }, [question.id]);
+
   const handlers = useSwipeable({
     onSwipedLeft: () => {
       setSwipeDirection('left');
@@ -45,7 +50,7 @@ export function Card({ question, onSwipeLeft, onSwipeRight, timerProgress }: Car
       {/* Timer bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-green-500 to-yellow-500 to-red-500 transition-all"
+          className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all"
           style={{ width: `${timerProgress}%` }}
         />
       </div>
