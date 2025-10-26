@@ -82,9 +82,25 @@ export function sessionRouter(io: Server) {
 
           return res.json({ sessionId: activeSession.id, deck });
         } else {
-          // Session has answers, can't reuse it
-          console.log(`Active session ${activeSession.id} already has ${answerCount.count} answers`);
-          return res.status(400).json({ error: 'Active session already exists with answers' });
+          // Session has answers - finish it automatically and start a new one
+          console.log(`Auto-finishing active session ${activeSession.id} with ${answerCount.count} answers to allow new game`);
+          
+          const oldSession = db.prepare(
+            'SELECT * FROM sessions WHERE id = ?'
+          ).get(activeSession.id) as { id: string; player_id: string; start_time: number; score: number } | undefined;
+
+          if (oldSession && oldSession.start_time) {
+            const endTime = Date.now();
+            const durationMs = endTime - oldSession.start_time;
+
+            // Finish the old session
+            db.prepare(
+              'UPDATE sessions SET end_time = ?, duration_ms = ? WHERE id = ?'
+            ).run(endTime, durationMs, activeSession.id);
+
+            console.log(`Old session ${activeSession.id} auto-finished`);
+          }
+          // Continue to create new session below
         }
       }
 
